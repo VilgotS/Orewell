@@ -1,0 +1,9 @@
+# What tags to track
+tracked-tags:
+  - ORES
+  - DIAMOND_ORES
+
+# What block IDs to track
+tracked-blocks:
+  - ANCIENT_DEBRIS
+  - NETHER_QUARTZ_ORE

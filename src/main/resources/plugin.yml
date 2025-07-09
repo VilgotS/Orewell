@@ -1,0 +1,14 @@
+name: Orewell
+version: 1.0
+main: se.svardo.orewell.Orewell
+description: Track naturally generated tags or block IDs
+author: vilgot
+website:
+api-version: 1.21.7
+
+commands:
+  orewell:
+    description: View your natural ore mining stats.
+    usage: /<command> stats
+    aliases: [stats,]
+
