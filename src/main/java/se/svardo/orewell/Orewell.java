@@ -2,7 +2,6 @@ package se.svardo.orewell;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -11,12 +10,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
+import org.jetbrains.annotations.NotNull;
 import se.svardo.orewell.util.TagMapper;
 
 import java.util.HashSet;
@@ -27,30 +27,31 @@ public class Orewell extends JavaPlugin implements Listener {
 
     private NamespacedKey placedKey;
 
-    private final Set<Tag<Material>> trackedTags = new HashSet<>();
+    private Set<Tag<Material>> trackedTags = new HashSet<>();
     private final Set<Material> trackedBlocks = new HashSet<>();
+
+    private  TagMapper tagMapper;
+
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         FileConfiguration config = getConfig();
 
+        tagMapper = new TagMapper(this);
 
         // Load tracked tags
-        List<String> tagNames = config.getStringList("tracked-tags");
-        for (String tagName : tagNames) {
-            try {
-//                if(!tagMapper.isValidTagName(tagName.toUpperCase())){
-//                    throw
-//                }
-                Tag<Material> tag = Tag.valueOf(tagName.toUpperCase());
-                trackedTags.add(tag);
-                getLogger().info("Tracking tag: " + tagName);
+        trackedTags = tagMapper.loadTagsFromConfig("tracked-tags");
 
-                setupObjective("tag_" + tagName.toLowerCase(), "Tag: " + tagName);
-            } catch (IllegalArgumentException e) {
-                getLogger().warning("Invalid tag name in config: " + tagName);
-            }
+        if(trackedTags.isEmpty()){
+            getLogger().warning("No valid tags tracked");
+        }
+
+        tagMapper.validateConfigTags("tracked-tags");
+
+        for(Tag<Material> tag : trackedTags)
+        {
+            setupObjective("tag_" + tag.getKey(), "Tag: " + tag.getValues());
         }
 
         // Load tracked blocks
@@ -67,7 +68,7 @@ public class Orewell extends JavaPlugin implements Listener {
             }
         }
 
-        placedKey = new NamespacedKey(this, "placed");
+        placedKey = new NamespacedKey(this, "player_placed");
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -83,13 +84,13 @@ public class Orewell extends JavaPlugin implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         Block block = event.getBlockPlaced();
         Material type = block.getType();
+
         if (shouldTrack(type)) {
-            BlockState state = block.getState();
-            PersistentDataContainer container = state.getPersistentDataContainer();
-            container.set(placedKey, PersistentDataType.BYTE, (byte) 1);
-            state.update(true);
+            block.setMetadata(placedKey.getKey(), new FixedMetadataValue(this, true));
+
         }
     }
+
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
@@ -97,14 +98,11 @@ public class Orewell extends JavaPlugin implements Listener {
         Material type = block.getType();
         if (!shouldTrack(type)) return;
 
-        BlockState state = block.getState();
-        PersistentDataContainer container = state.getPersistentDataContainer();
-        boolean isPlaced = container.has(placedKey, PersistentDataType.BYTE);
 
-        if (!isPlaced) {
+        if (!isPlayerPlaced(block)) {
+
             Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
             String playerName = event.getPlayer().getName();
-
 
 
             for (Tag<Material> tag : trackedTags) {
@@ -123,9 +121,28 @@ public class Orewell extends JavaPlugin implements Listener {
         }
     }
 
+    private boolean isPlayerPlaced(Block block) {
+
+        if(!block.hasMetadata(placedKey.getKey())) return false;
+
+
+        List<MetadataValue> metadataValues = block.getMetadata(placedKey.getKey());
+        for (MetadataValue value : metadataValues)
+        {
+            if(this.equals(value.getOwningPlugin()) && value.asBoolean()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean shouldTrack(Material type) {
-        for (Tag<Material> tag : trackedTags) {
-            if (tag.isTagged(type)) return true;
+//        for (Tag<Material> tag : trackedTags) {
+//            if (tag.isTagged(type)) return true;
+//        }
+        if(tagMapper.isInTags(type, trackedTags))
+        {
+            return true;
         }
         return trackedBlocks.contains(type);
     }
@@ -135,9 +152,9 @@ public class Orewell extends JavaPlugin implements Listener {
         obj.getScore(playerName).setScore(current + 1);
     }
 
-    // 📊 /naturalores stats command placeholder
+    //stats command placeholder
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(ChatColor.RED + "Only players can use this command.");
             return true;
@@ -148,7 +165,7 @@ public class Orewell extends JavaPlugin implements Listener {
             return true;
         }
 
-        sender.sendMessage(ChatColor.YELLOW + "Usage: /naturalores stats");
+        sender.sendMessage(ChatColor.YELLOW + "Usage: /orewell stats");
         return true;
     }
 

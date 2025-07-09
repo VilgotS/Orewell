@@ -1,5 +1,5 @@
 name: Orewell
-version: 1.0
+version: 1.1
 main: se.svardo.orewell.Orewell
 description: Track naturally generated tags or block IDs
 author: vilgot
@@ -10,5 +10,5 @@ commands:
   orewell:
     description: View your natural ore mining stats.
     usage: /<command> stats
-    aliases: [stats,]
+    aliases: [natrualore, natrualmined,ihavemined]
 

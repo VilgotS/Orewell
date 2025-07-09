@@ -1,7 +1,15 @@
 # What tags to track
+# https://mcreator.net/wiki/minecraft-block-tags-list
 tracked-tags:
   - ORES
   - DIAMOND_ORES
+  - EMERALD_ORES
+  - GOLD_ORES
+  - IRON_ORES
+  - LAPIS_ORES
+  - redstone_ores
+  - ores/netherite_scrap
+  - dragon_immune
 
 # What block IDs to track
 tracked-blocks:
