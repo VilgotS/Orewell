@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'se.svardo'
-version = '1.0-SNAPSHOT'
+version = '1.1'
 
 repositories {
     mavenCentral()
@@ -19,7 +19,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.6-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+}
+
+processResources {
+    filesMatching('plugin.yml') {
+        expand('version': project.version)
+    }
 }
 
 tasks {

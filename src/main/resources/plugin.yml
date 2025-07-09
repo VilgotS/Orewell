@@ -1,5 +1,5 @@
 name: Orewell
-version: 1.1
+version: ${version}
 main: se.svardo.orewell.Orewell
 description: Track naturally generated tags or block IDs
 author: vilgot
