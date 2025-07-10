@@ -40,19 +40,24 @@ public class Orewell extends JavaPlugin implements Listener {
 
         tagMapper = new TagMapper(this);
 
-        // Load tracked tags
-        trackedTags = tagMapper.loadTagsFromConfig("tracked-tags");
-
-        if(trackedTags.isEmpty()){
-            getLogger().warning("No valid tags tracked");
-        }
-
         tagMapper.validateConfigTags("tracked-tags");
 
-        for(Tag<Material> tag : trackedTags)
-        {
-            setupObjective("tag_" + tag.getKey(), "Tag: " + tag.getValues());
+
+        List<String> tagNames = config.getStringList("tracked-tags");
+        for (String tagName : tagNames) {
+            try {
+                tag = tagMapper.getTag(tagName);
+                trackedTags.add(tag);
+                getLogger().info("Tracking tag: " + tagName);
+
+                setupObjective("tag_" + asCommandFriendly(tagName).toLowerCase(), "Tag: " + tagName);
+            } catch (IllegalArgumentException e){
+                getLogger().warning("Invalid tag name in config: " + tagName);
+
+            }
         }
+
+        getLogger().info("Tracking " + trackedTags.size() + "valid tags");
 
         // Load tracked blocks
         List<String> blockNames = config.getStringList("tracked-blocks");
@@ -62,14 +67,20 @@ public class Orewell extends JavaPlugin implements Listener {
                 trackedBlocks.add(mat);
                 getLogger().info("Tracking block: " + blockName);
 
-                setupObjective("block_" + blockName.toLowerCase(), "Block: " + blockName);
+                setupObjective("block_" + blockName.toLowerCase(), "Tracked Block " + blockName);
             } catch (IllegalArgumentException e) {
                 getLogger().warning("Invalid block name in config: " + blockName);
             }
         }
+        getLogger().info("Tracking " + trackedBlocks.size() + "valid blocks");
+
 
         placedKey = new NamespacedKey(this, "player_placed");
         Bukkit.getPluginManager().registerEvents(this, this);
+    }
+
+    private String asCommandFriendly(String stringToChange) {
+        return stringToChange.replace(':', '_');
     }
 
     private void setupObjective(String name, String displayName) {
@@ -160,12 +171,7 @@ public class Orewell extends JavaPlugin implements Listener {
             return true;
         }
 
-        if (args.length >= 1 && args[0].equalsIgnoreCase("stats")) {
-            showStats(player);
-            return true;
-        }
-
-        sender.sendMessage(ChatColor.YELLOW + "Usage: /orewell stats");
+        showStats(player);
         return true;
     }
 
