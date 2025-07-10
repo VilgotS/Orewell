@@ -59,7 +59,7 @@ public class Orewell extends JavaPlugin implements Listener {
                 trackedBlocks.add(mat);
                 getLogger().info("Tracking block: " + blockName);
 
-                setupObjective("block_" + blockName.toLowerCase(), "Tracked Block " + blockName);
+                setupObjective("orewell_block_" + blockName.toLowerCase(), "Tracked Block " + blockName);
             } catch (IllegalArgumentException e) {
                 getLogger().warning("Invalid block name in config: " + blockName);
             }
@@ -82,7 +82,7 @@ public class Orewell extends JavaPlugin implements Listener {
             trackedTags.add(tag);
             getLogger().info("Tracking tag: " + tagName);
 
-            String objectiveName = "tag_" + asCommandFriendly(tagName).toLowerCase();
+            String objectiveName = "orewell_tag_" + asCommandFriendly(tagName).toLowerCase();
             tagObjectiveNames.put(tag, objectiveName);
 
             setupObjective(objectiveName, "Tag: " + tagName);
@@ -156,7 +156,7 @@ public class Orewell extends JavaPlugin implements Listener {
             }
 
             if (trackedBlocks.contains(type)) {
-                String objectiveName = "block_" + type.name().toLowerCase();
+                String objectiveName = "orewell_block_" + type.name().toLowerCase();
                 Objective objective = scoreboard.getObjective(objectiveName);
                 if (objective != null) increment(objective, playerName);
             }
