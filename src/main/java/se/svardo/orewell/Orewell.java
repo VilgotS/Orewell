@@ -22,10 +22,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import se.svardo.orewell.util.TagHelper;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Orewell extends JavaPlugin implements Listener {
 
@@ -35,6 +32,7 @@ public class Orewell extends JavaPlugin implements Listener {
     private final Set<Material> trackedBlocks = new HashSet<>();
 
     private TagHelper tagHelper;
+    private final Map<Tag<Material>, String> tagObjectiveNames = new HashMap<>();
 
 
     @Override
@@ -80,7 +78,10 @@ public class Orewell extends JavaPlugin implements Listener {
                 trackedTags.add(tag);
                 getLogger().info("Tracking tag: " + tagName);
 
-                setupObjective("tag_" + asCommandFriendly(tagName).toLowerCase(), "Tag: " + tagName);
+                String objectiveName = "tag_" + asCommandFriendly(tagName).toLowerCase();
+                tagObjectiveNames.put(tag, objectiveName);
+                
+                setupObjective(objectiveName, "Tag: " + tagName);
             } catch (IllegalArgumentException e){
                 getLogger().warning("Invalid tag name in config: " + tagName);
 
@@ -89,6 +90,7 @@ public class Orewell extends JavaPlugin implements Listener {
 
         getLogger().info("Tracking " + trackedTags.size() + "valid tags");
     }
+    
 
     private void validateTagNames(List<String> tagNamesToValidate) {
 
@@ -145,16 +147,16 @@ public class Orewell extends JavaPlugin implements Listener {
 
             for (Tag<Material> tag : trackedTags) {
                 if (tag.isTagged(type)) {
-                    String objName = "tag_" + tag.getKey().getKey().toLowerCase();
-                    Objective obj = scoreboard.getObjective(objName);
-                    if (obj != null) increment(obj, playerName);
+                    String objectiveName = tagObjectiveNames.get(tag);
+                    Objective objective = scoreboard.getObjective(objectiveName);
+                    if (objective != null) increment(objective, playerName);
                 }
             }
 
             if (trackedBlocks.contains(type)) {
-                String objName = "block_" + type.name().toLowerCase();
-                Objective obj = scoreboard.getObjective(objName);
-                if (obj != null) increment(obj, playerName);
+                String objectiveName = "block_" + type.name().toLowerCase();
+                Objective objective = scoreboard.getObjective(objectiveName);
+                if (objective != null) increment(objective, playerName);
             }
         }
     }
