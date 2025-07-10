@@ -64,35 +64,36 @@ public class Orewell extends JavaPlugin implements Listener {
                 getLogger().warning("Invalid block name in config: " + blockName);
             }
         }
-        getLogger().info("Tracking " + trackedBlocks.size() + "valid blocks");
+        getLogger().info("Tracking " + trackedBlocks.size() + " valid blocks");
     }
 
     private void loadTrackedTags(FileConfiguration config) {
         List<String> tagNames = config.getStringList("tracked-tags");
 
-        validateTagNames(tagNames);
+        List<String> invalidTags = validateTagNames(tagNames);
 
         for (String tagName : tagNames) {
-            try {
-                Tag<Material> tag = tagHelper.getTag(tagName);
-                trackedTags.add(tag);
-                getLogger().info("Tracking tag: " + tagName);
 
-                String objectiveName = "tag_" + asCommandFriendly(tagName).toLowerCase();
-                tagObjectiveNames.put(tag, objectiveName);
-                
-                setupObjective(objectiveName, "Tag: " + tagName);
-            } catch (IllegalArgumentException e){
-                getLogger().warning("Invalid tag name in config: " + tagName);
-
+            if(invalidTags.contains(tagName)) {
+                continue;
             }
+
+            Tag<Material> tag = tagHelper.getTag(tagName);
+            trackedTags.add(tag);
+            getLogger().info("Tracking tag: " + tagName);
+
+            String objectiveName = "tag_" + asCommandFriendly(tagName).toLowerCase();
+            tagObjectiveNames.put(tag, objectiveName);
+
+            setupObjective(objectiveName, "Tag: " + tagName);
+
         }
 
-        getLogger().info("Tracking " + trackedTags.size() + "valid tags");
+        getLogger().info("Tracking " + trackedTags.size() + " valid tags");
     }
     
 
-    private void validateTagNames(List<String> tagNamesToValidate) {
+    private List<String> validateTagNames(List<String> tagNamesToValidate) {
 
         List<String> invalidTags = new ArrayList<>();
 
@@ -106,6 +107,7 @@ public class Orewell extends JavaPlugin implements Listener {
             getLogger().warning("Invalid tags found in config: " + String.join(", ", invalidTags));
         }
 
+        return invalidTags;
     }
 
     private String asCommandFriendly(String stringToChange) {
