@@ -11,12 +11,10 @@ import java.util.*;
 import java.util.logging.Logger;
 
 public class TagHelper {
-    private final JavaPlugin plugin;
     private final Logger logger;
     private final Map<String, Tag<Material>> tagMap;
 
     public TagHelper(JavaPlugin plugin) {
-        this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.tagMap = new HashMap<>();
         initializeTagMap();
