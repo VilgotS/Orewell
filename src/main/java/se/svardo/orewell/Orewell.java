@@ -1,5 +1,6 @@
 package se.svardo.orewell;
 
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -13,12 +14,15 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.RenderType;
 import org.bukkit.scoreboard.Scoreboard;
 
 import org.jetbrains.annotations.NotNull;
-import se.svardo.orewell.util.TagMapper;
+import se.svardo.orewell.util.TagHelper;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,10 +31,10 @@ public class Orewell extends JavaPlugin implements Listener {
 
     private NamespacedKey placedKey;
 
-    private Set<Tag<Material>> trackedTags = new HashSet<>();
+    private final Set<Tag<Material>> trackedTags = new HashSet<>();
     private final Set<Material> trackedBlocks = new HashSet<>();
 
-    private  TagMapper tagMapper;
+    private TagHelper tagHelper;
 
 
     @Override
@@ -38,28 +42,18 @@ public class Orewell extends JavaPlugin implements Listener {
         saveDefaultConfig();
         FileConfiguration config = getConfig();
 
-        tagMapper = new TagMapper(this);
+        tagHelper = new TagHelper(this);
 
-        tagMapper.validateConfigTags("tracked-tags");
+        loadTrackedTags(config);
+
+        loadTrackedBlocks(config);
 
 
-        List<String> tagNames = config.getStringList("tracked-tags");
-        for (String tagName : tagNames) {
-            try {
-                tag = tagMapper.getTag(tagName);
-                trackedTags.add(tag);
-                getLogger().info("Tracking tag: " + tagName);
+        placedKey = new NamespacedKey(this, "player_placed");
+        Bukkit.getPluginManager().registerEvents(this, this);
+    }
 
-                setupObjective("tag_" + asCommandFriendly(tagName).toLowerCase(), "Tag: " + tagName);
-            } catch (IllegalArgumentException e){
-                getLogger().warning("Invalid tag name in config: " + tagName);
-
-            }
-        }
-
-        getLogger().info("Tracking " + trackedTags.size() + "valid tags");
-
-        // Load tracked blocks
+    private void loadTrackedBlocks(FileConfiguration config) {
         List<String> blockNames = config.getStringList("tracked-blocks");
         for (String blockName : blockNames) {
             try {
@@ -73,10 +67,43 @@ public class Orewell extends JavaPlugin implements Listener {
             }
         }
         getLogger().info("Tracking " + trackedBlocks.size() + "valid blocks");
+    }
 
+    private void loadTrackedTags(FileConfiguration config) {
+        List<String> tagNames = config.getStringList("tracked-tags");
 
-        placedKey = new NamespacedKey(this, "player_placed");
-        Bukkit.getPluginManager().registerEvents(this, this);
+        validateTagNames(tagNames);
+
+        for (String tagName : tagNames) {
+            try {
+                Tag<Material> tag = tagHelper.getTag(tagName);
+                trackedTags.add(tag);
+                getLogger().info("Tracking tag: " + tagName);
+
+                setupObjective("tag_" + asCommandFriendly(tagName).toLowerCase(), "Tag: " + tagName);
+            } catch (IllegalArgumentException e){
+                getLogger().warning("Invalid tag name in config: " + tagName);
+
+            }
+        }
+
+        getLogger().info("Tracking " + trackedTags.size() + "valid tags");
+    }
+
+    private void validateTagNames(List<String> tagNamesToValidate) {
+
+        List<String> invalidTags = new ArrayList<>();
+
+        for (String tagName : tagNamesToValidate) {
+            if (tagHelper.getTag(tagName) == null) {
+                invalidTags.add(tagName);
+            }
+        }
+
+        if (!invalidTags.isEmpty()) {
+            getLogger().warning("Invalid tags found in config: " + String.join(", ", invalidTags));
+        }
+
     }
 
     private String asCommandFriendly(String stringToChange) {
@@ -86,7 +113,7 @@ public class Orewell extends JavaPlugin implements Listener {
     private void setupObjective(String name, String displayName) {
         Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
         if (scoreboard.getObjective(name) == null) {
-            scoreboard.registerNewObjective(name, "dummy", displayName);
+            scoreboard.registerNewObjective(name, Criteria.DUMMY, net.kyori.adventure.text.Component.text(displayName), RenderType.INTEGER);
             getLogger().info("Created scoreboard objective: " + name);
         }
     }
@@ -148,10 +175,8 @@ public class Orewell extends JavaPlugin implements Listener {
     }
 
     private boolean shouldTrack(Material type) {
-//        for (Tag<Material> tag : trackedTags) {
-//            if (tag.isTagged(type)) return true;
-//        }
-        if(tagMapper.isInTags(type, trackedTags))
+
+        if(tagHelper.isInTags(type, trackedTags))
         {
             return true;
         }
@@ -167,7 +192,7 @@ public class Orewell extends JavaPlugin implements Listener {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
+            sender.sendMessage(NamedTextColor.RED + "Only players can use this command.");
             return true;
         }
 
@@ -177,14 +202,14 @@ public class Orewell extends JavaPlugin implements Listener {
 
     private void showStats(Player player) {
         Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
-        player.sendMessage(ChatColor.GREEN + "==== Your Natural Ore Stats ====");
+        player.sendMessage(NamedTextColor.GREEN + "==== Your Natural Ore Stats ====");
 
         for (Tag<Material> tag : trackedTags) {
             String objName = "tag_" + tag.getKey().getKey().toLowerCase();
             Objective obj = scoreboard.getObjective(objName);
             if (obj != null) {
                 int score = obj.getScore(player.getName()).getScore();
-                player.sendMessage(ChatColor.AQUA + tag.getKey().getKey() + ": " + score);
+                player.sendMessage(NamedTextColor.AQUA + tag.getKey().getKey() + ": " + score);
             }
         }
 
@@ -193,7 +218,7 @@ public class Orewell extends JavaPlugin implements Listener {
             Objective obj = scoreboard.getObjective(objName);
             if (obj != null) {
                 int score = obj.getScore(player.getName()).getScore();
-                player.sendMessage(ChatColor.LIGHT_PURPLE + mat.name() + ": " + score);
+                player.sendMessage(NamedTextColor.LIGHT_PURPLE + mat.name() + ": " + score);
             }
         }
     }

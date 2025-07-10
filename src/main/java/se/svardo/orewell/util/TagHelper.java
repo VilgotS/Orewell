@@ -4,19 +4,18 @@ import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.configuration.file.FileConfiguration;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.logging.Logger;
 
-public class TagMapper {
+public class TagHelper {
     private final JavaPlugin plugin;
     private final Logger logger;
     private final Map<String, Tag<Material>> tagMap;
 
-    public TagMapper(JavaPlugin plugin) {
+    public TagHelper(JavaPlugin plugin) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.tagMap = new HashMap<>();
@@ -136,26 +135,6 @@ public class TagMapper {
         return tags;
     }
 
-    /**
-     * Load tags from config file
-     * @param configPath The path in the config file where tags are stored
-     * @return Set of valid Tag objects
-     */
-    public Set<Tag<Material>> loadTagsFromConfig(String configPath) {
-        FileConfiguration config = plugin.getConfig();
-        List<String> tagNames = config.getStringList(configPath);
-
-        if (tagNames.isEmpty()) {
-            logger.warning("No tags found in config at path: " + configPath);
-            return new HashSet<>();
-        }
-
-        logger.info("Loading " + tagNames.size() + " tags from config");
-        Set<Tag<Material>> tags = getTags(tagNames);
-        logger.info("Successfully loaded " + tags.size() + " valid tags");
-
-        return tags;
-    }
 
     /**
      * Check if a material is in any of the specified tags
@@ -180,29 +159,6 @@ public class TagMapper {
         return new HashSet<>(tagMap.keySet());
     }
 
-    /**
-     * Validate tags from config and log any invalid ones
-     * @param configPath The path in the config file where tags are stored
-     * @return List of invalid tag names
-     */
-    public List<String> validateConfigTags(String configPath) {
-        FileConfiguration config = plugin.getConfig();
-        List<String> tagNames = config.getStringList(configPath);
-        List<String> invalidTags = new ArrayList<>();
-
-        for (String tagName : tagNames) {
-            if (getTag(tagName) == null) {
-                invalidTags.add(tagName);
-            }
-        }
-
-        if (!invalidTags.isEmpty()) {
-            logger.warning("Invalid tags found in config: " + String.join(", ", invalidTags));
-            //logger.info("Available tags: " + String.join(", ", getAvailableTagNames()));
-        }
-
-        return invalidTags;
-    }
 
     /**
      * Check if a string represents a valid tag name
