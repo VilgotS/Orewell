@@ -45,7 +45,7 @@ The compiled plugin will be in build/libs/Orewell-1.X.jar
 
 ## Installation
 
-1. Download the latest release ([GitHub](), [Hangar](), [Modrinth]()) or build from source
+1. Download the latest release ([GitHub](https://github.com/VilgotS/Orewell/releases), [Hangar](https://hangar.papermc.io/VilgotS/Orewell), [Modrinth](https://modrinth.com/plugin/orewell)) or build from source
 2. Copy the Orewell.jar file to your server's plugins/ directory
 3. Start your server
 4. Configure the plugin (see [Configuration](#configuration) section below)
