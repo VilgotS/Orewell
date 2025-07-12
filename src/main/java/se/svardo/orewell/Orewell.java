@@ -1,3 +1,22 @@
+/*
+    Orewell. A plugin for PaperMC servers to tack naturally generated blocks mined.
+    Copyright (C) 2025  Vilgot Svärd <dev.vilgot@gmail.com>
+
+    This file is part of Orewell.
+
+    Orewell is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Orewell is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Orewell. If not, see <https://www.gnu.org/licenses/>.
+ */
 package se.svardo.orewell;
 
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -18,6 +37,7 @@ import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.RenderType;
 import org.bukkit.scoreboard.Scoreboard;
+
 
 import org.jetbrains.annotations.NotNull;
 import se.svardo.orewell.util.TagHelper;
@@ -129,7 +149,6 @@ public class Orewell extends JavaPlugin implements Listener {
 
         if (shouldTrack(type)) {
             block.setMetadata(placedKey.getKey(), new FixedMetadataValue(this, true));
-
         }
     }
 
